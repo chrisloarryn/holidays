@@ -6,14 +6,14 @@ import { HolidayScrapperService } from '../services/holiday-scrapper/holiday-scr
 @Injectable()
 export class HolidaysService {
   constructor(
-    private readonly holidayScrapperService: HolidayScrapperService,
+    private readonly holidayScrapperService: HolidayScrapperService
   ) {}
   create(createHolidayDto: CreateHolidayDto) {
     return 'This action adds a new holiday';
   }
 
-  findAll() {
-    return this.holidayScrapperService.obtenerFeriados();
+  findAll(year?: string) {
+    return this.holidayScrapperService.obtenerFeriados(year);
   }
 
   findOne(id: number) {

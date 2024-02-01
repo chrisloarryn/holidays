@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query
+} from '@nestjs/common';
 import { HolidaysService } from './holidays.service';
 import { CreateHolidayDto } from './dto/create-holiday.dto';
 import { UpdateHolidayDto } from './dto/update-holiday.dto';
@@ -13,8 +22,8 @@ export class HolidaysController {
   }
 
   @Get()
-  findAll() {
-    return this.holidaysService.findAll();
+  findAll(@Query('year') year: string) {
+    return this.holidaysService.findAll(year);
   }
 
   @Get(':id')

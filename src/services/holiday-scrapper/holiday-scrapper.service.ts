@@ -1,16 +1,23 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 
 @Injectable()
 export class HolidayScrapperService {
-  private readonly url = 'https://www.feriados.cl';
+  private url = 'https://www.feriados.cl';
 
   private limpiarTexto(texto: string): string {
     return texto.replace(/[\n\t]+/g, ' ').trim();
   }
 
-  async obtenerFeriados(): Promise<any[]> {
+  async obtenerFeriados(year?: string): Promise<any[]> {
+    const currentYear = new Date().getFullYear();
+    if (year && parseInt(year) !== currentYear) {
+      this.url = `${this.url}/${year}.htm`;
+    }
+
+    Logger.log(`Obteniendo feriados desde ${this.url}`);
+
     try {
       const response = await axios.get(this.url);
       const html = response.data;
@@ -40,7 +47,7 @@ export class HolidayScrapperService {
             tipo,
             respaldoLegal: respaldoLegalLimpio,
             isIrrenunciable,
-            isConfirmed: !isConfirmed,
+            isConfirmed: !isConfirmed
           });
         }
       });
