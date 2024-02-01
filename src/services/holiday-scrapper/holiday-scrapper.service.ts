@@ -1,4 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException
+} from '@nestjs/common';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 
@@ -12,17 +17,44 @@ export class HolidayScrapperService {
 
   async obtenerFeriados(year?: string): Promise<any[]> {
     const currentYear = new Date().getFullYear();
-    if (year && parseInt(year) !== currentYear) {
-      this.url = `${this.url}/${year}.htm`;
-    }
-
-    Logger.log(`Obteniendo feriados desde ${this.url}`);
-
     try {
-      const response = await axios.get(this.url);
-      const html = response.data;
-      const $ = cheerio.load(html);
+      let response = await axios.get(this.url);
+      let html = response.data;
+      let $ = cheerio.load(html);
+      const years: number[] = [];
+
+      $('table#menutarget tbody tr td').each((index, element) => {
+        // Obtener el texto de cada elemento que contiene los años
+        const yearText = $(element).text().trim();
+
+        // Intentar extraer el año del texto
+        const yearMatch = yearText.match(/Feriados Año (\d{4})/);
+        if (yearMatch && yearMatch[1]) {
+          // Si el texto contiene un año, añadirlo al array
+          years.push(Number(yearMatch[1]));
+        }
+      });
+
+      Logger.log('Years:', years);
+
+      if (years.length === 0)
+        throw new InternalServerErrorException('No se encontraron años');
+
+      if (years.length > 0 && year && years.indexOf(parseInt(year)) === -1)
+        throw new NotFoundException(
+          'El año no existe en la lista de años de feriados.cl'
+        );
+
+      if (year && parseInt(year) !== currentYear)
+        this.url = `${this.url}/${year}.htm`;
+
+      if (parseInt(year) !== currentYear) response = await axios.get(this.url);
+
+      html = response.data;
+      $ = cheerio.load(html);
       const feriados = [];
+
+      Logger.log(`Obteniendo feriados desde ${this.url}`);
 
       $('tbody > tr').each((i, el) => {
         const dia = $(el).find('td').first().text().trim();

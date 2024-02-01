@@ -6,11 +6,14 @@ import {
   Patch,
   Param,
   Delete,
-  Query
+  Query,
+  Logger,
+  BadRequestException
 } from '@nestjs/common';
 import { HolidaysService } from './holidays.service';
 import { CreateHolidayDto } from './dto/create-holiday.dto';
 import { UpdateHolidayDto } from './dto/update-holiday.dto';
+import { QueryParamsDto } from './dto/query-params.dto';
 
 @Controller('holidays')
 export class HolidaysController {
@@ -21,8 +24,21 @@ export class HolidaysController {
     return this.holidaysService.create(createHolidayDto);
   }
 
+  validateYear(year: string) {
+    const cleanedYear = year.trim().replace(/\D/g, '');
+    const parsedYear = parseInt(cleanedYear);
+    if (isNaN(parsedYear)) {
+      throw new BadRequestException('Year is not a number');
+    }
+  }
+
   @Get()
-  findAll(@Query('year') year: string) {
+  findAll(@Query() query: QueryParamsDto) {
+    Logger.log('Query params', JSON.stringify(query));
+    const { year } = query;
+
+    if (year) this.validateYear(year);
+
     return this.holidaysService.findAll(year);
   }
 
