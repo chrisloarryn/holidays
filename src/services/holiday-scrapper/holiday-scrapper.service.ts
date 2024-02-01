@@ -52,7 +52,7 @@ export class HolidayScrapperService {
 
       html = response.data;
       $ = cheerio.load(html);
-      const feriados = [];
+      let feriados = [];
 
       Logger.log(`Obteniendo feriados desde ${this.url}`);
 
@@ -83,6 +83,10 @@ export class HolidayScrapperService {
           });
         }
       });
+
+      feriados = feriados.filter(
+        (feriado) => feriado.dia !== 'Todos los Días Domingos'
+      );
 
       return feriados;
     } catch (error) {
