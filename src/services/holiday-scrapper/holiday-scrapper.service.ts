@@ -37,7 +37,7 @@ export class HolidayScrapperService {
   }
 
   async obtenerFeriados(year?: string): Promise<any[]> {
-    const currentYear = new Date().getFullYear();
+    const currentYear = dayjs().year();
     try {
       let response = await axios.get(this.url);
       let html = response.data;
@@ -61,17 +61,20 @@ export class HolidayScrapperService {
       if (years.length === 0)
         throw new InternalServerErrorException('No se encontraron años');
 
+      Logger.debug(`Year: >${year}<`);
+      Logger.debug(`Years: >${years}<`);
+
       if (years.length > 0 && year && years.indexOf(parseInt(year)) === -1)
         throw new NotFoundException(
-          'El año no existe en la lista de años de feriados.cl'
+          `El año no existe en la lista de años de feriados.cl (${year})`
         );
 
-      let newUrl = '';
+      let newUrl = this.url;
 
       if (year && parseInt(year) !== currentYear)
         newUrl = `${this.url}/${year}.htm`;
 
-      if (parseInt(year) !== currentYear) response = await axios.get(newUrl);
+      response = await axios.get(newUrl);
 
       html = response.data;
       $ = cheerio.load(html);

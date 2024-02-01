@@ -14,6 +14,7 @@ import { HolidaysService } from './holidays.service';
 import { CreateHolidayDto } from './dto/create-holiday.dto';
 import { UpdateHolidayDto } from './dto/update-holiday.dto';
 import { QueryParamsDto } from './dto/query-params.dto';
+import * as dayjs from 'dayjs';
 
 @Controller('holidays')
 export class HolidaysController {
@@ -24,20 +25,23 @@ export class HolidaysController {
     return this.holidaysService.create(createHolidayDto);
   }
 
-  validateYear(year: string) {
-    const cleanedYear = year.trim().replace(/\D/g, '');
-    const parsedYear = parseInt(cleanedYear);
-    if (isNaN(parsedYear)) {
-      throw new BadRequestException('Year is not a number');
+  validateYear(year: string): string {
+    const cleanedYear = year.trim().replace(/\s+/g, '').replace(/\D/g, '');
+    const parsedYear = parseInt(cleanedYear, 10); // Asegúrate de usar la base decimal para el parseo
+
+    if (isNaN(parsedYear) || parsedYear.toString() !== cleanedYear) {
+      throw new BadRequestException('El año no es un número válido');
     }
+
+    return parsedYear.toString(); // Devuelve el año como un número
   }
 
   @Get()
   findAll(@Query() query: QueryParamsDto) {
     Logger.log('Query params', JSON.stringify(query));
-    const { year } = query;
+    let year = query.year || dayjs().year().toString();
 
-    if (year) this.validateYear(year);
+    year = this.validateYear(year);
 
     return this.holidaysService.findAll(year);
   }
