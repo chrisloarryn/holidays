@@ -114,16 +114,8 @@ export class HolidayScrapperService {
           const day = date.split(' de ')[0];
           const yearParsed = year || currentYear;
 
-          Logger.log(`Date: ${date} ${feriado.dia}`);
           month = this.parseMonth(month);
-          Logger.log(`Month: ${month}`);
-          Logger.log(`Day: ${day}`);
-          Logger.log(`Year: ${yearParsed}`);
-
           const dateStr = `${yearParsed}-${month}-${day}`;
-
-          Logger.log(`DateStr: ${dateStr}`);
-
           const dateNew = dayjs(dateStr, 'YYYY-MM-DD').format('YYYY-MM-DD');
 
           return {
