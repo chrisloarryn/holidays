@@ -10,7 +10,7 @@ import * as dayjs from 'dayjs';
 
 @Injectable()
 export class HolidayScrapperService {
-  private url = 'https://www.feriados.cl';
+  private readonly url = 'https://www.feriados.cl';
 
   private limpiarTexto(texto: string): string {
     return texto.replace(/[\n\t]+/g, ' ').trim();
@@ -66,10 +66,12 @@ export class HolidayScrapperService {
           'El año no existe en la lista de años de feriados.cl'
         );
 
-      if (year && parseInt(year) !== currentYear)
-        this.url = `${this.url}/${year}.htm`;
+      let newUrl = '';
 
-      if (parseInt(year) !== currentYear) response = await axios.get(this.url);
+      if (year && parseInt(year) !== currentYear)
+        newUrl = `${this.url}/${year}.htm`;
+
+      if (parseInt(year) !== currentYear) response = await axios.get(newUrl);
 
       html = response.data;
       $ = cheerio.load(html);
