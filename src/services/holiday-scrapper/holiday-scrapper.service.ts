@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
+import * as dayjs from 'dayjs';
 
 @Injectable()
 export class HolidayScrapperService {
@@ -13,6 +14,26 @@ export class HolidayScrapperService {
 
   private limpiarTexto(texto: string): string {
     return texto.replace(/[\n\t]+/g, ' ').trim();
+  }
+
+  // parse months from spanish to 01, 02, 03, etc
+  private parseMonth(month: string): string {
+    const months = [
+      'Enero',
+      'Febrero',
+      'Marzo',
+      'Abril',
+      'Mayo',
+      'Junio',
+      'Julio',
+      'Agosto',
+      'Septiembre',
+      'Octubre',
+      'Noviembre',
+      'Diciembre'
+    ];
+
+    return (months.indexOf(month) + 1).toString().padStart(2, '0');
   }
 
   async obtenerFeriados(year?: string): Promise<any[]> {
@@ -35,7 +56,7 @@ export class HolidayScrapperService {
         }
       });
 
-      Logger.log('Years:', years);
+      Logger.log('Years:', JSON.stringify(years));
 
       if (years.length === 0)
         throw new InternalServerErrorException('No se encontraron años');
@@ -74,7 +95,7 @@ export class HolidayScrapperService {
 
         if (dia && festividad) {
           feriados.push({
-            dia,
+            dia: dia.replace(/Todos los Días Domingos/g, ''),
             festividad: festividadLimpia,
             tipo,
             respaldoLegal: respaldoLegalLimpio,
@@ -84,9 +105,32 @@ export class HolidayScrapperService {
         }
       });
 
-      feriados = feriados.filter(
-        (feriado) => feriado.dia !== 'Todos los Días Domingos'
-      );
+      feriados = feriados
+        .filter((feriado) => feriado.dia !== '')
+        .map((feriado) => {
+          // Lunes, 01 de Enero. parse using dayjs to date format.
+          const date = feriado.dia.split(', ')[1];
+          let month = date.split(' de ')[1];
+          const day = date.split(' de ')[0];
+          const yearParsed = year || currentYear;
+
+          Logger.log(`Date: ${date} ${feriado.dia}`);
+          month = this.parseMonth(month);
+          Logger.log(`Month: ${month}`);
+          Logger.log(`Day: ${day}`);
+          Logger.log(`Year: ${yearParsed}`);
+
+          const dateStr = `${yearParsed}-${month}-${day}`;
+
+          Logger.log(`DateStr: ${dateStr}`);
+
+          const dateNew = dayjs(dateStr, 'YYYY-MM-DD').format('YYYY-MM-DD');
+
+          return {
+            ...feriado,
+            fecha: dateNew
+          };
+        });
 
       return feriados;
     } catch (error) {
