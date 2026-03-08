@@ -1,15 +1,15 @@
-# Holidays API
+# API de Feriados
 
 Servicio NestJS para consultar feriados de Chile consumiendo y parseando `https://www.feriados.cl`.
 
-El repo está organizado con enfoque feature-first y Clean Architecture dentro de `src/holidays`:
+El repositorio está organizado con enfoque por funcionalidad dentro de `src/holidays`:
 
 - `domain`: modelo de dominio `Holiday`
 - `application`: casos de uso, puertos y errores
-- `infrastructure`: adapter concreto contra `feriados.cl`
-- `presentation`: controller HTTP, DTOs y mapeo del payload público
+- `infrastructure`: adaptador concreto contra `feriados.cl`
+- `presentation`: controlador HTTP, DTOs y mapeo del payload público
 
-El `AppModule` actúa como composition root y `GET /` se mantiene como shell mínimo.
+`AppModule` actúa como raíz de composición y `GET /` se mantiene como endpoint mínimo de entrada.
 
 ## Requisitos
 
@@ -33,7 +33,7 @@ yarn install
 # desarrollo
 yarn start
 
-# watch mode
+# modo observación
 yarn start:dev
 
 # producción local
@@ -43,11 +43,23 @@ yarn start:prod
 
 La aplicación levanta por defecto en `http://localhost:3000`.
 
-## Endpoints
+## URLs expuestas
+
+Con la aplicación levantada en local, estas son las rutas públicas del servicio:
+
+- `GET http://localhost:3000/`
+- `GET http://localhost:3000/holidays`
+- `GET http://localhost:3000/holidays?year=2026`
+- `POST http://localhost:3000/holidays`
+- `GET http://localhost:3000/holidays/:id`
+- `PATCH http://localhost:3000/holidays/:id`
+- `DELETE http://localhost:3000/holidays/:id`
+
+## Endpoints principales
 
 ### `GET /`
 
-Health/root endpoint mínimo.
+Endpoint raíz mínimo.
 
 Respuesta:
 
@@ -86,23 +98,23 @@ Ejemplo de respuesta:
 ]
 ```
 
-### Endpoints placeholder
+## Endpoints actualmente no implementados de forma real
 
-Se mantienen sin cambio porque forman parte del contrato actual:
+Estas rutas se mantienen porque forman parte del contrato HTTP actual:
 
 - `POST /holidays`
 - `GET /holidays/:id`
 - `PATCH /holidays/:id`
 - `DELETE /holidays/:id`
 
-Hoy devuelven respuestas placeholder y están aislados en casos de uso dedicados.
+Hoy responden con mensajes placeholder y están aisladas en casos de uso dedicados.
 
-## OpenAPI
+## Documentación OpenAPI
 
 La documentación OpenAPI se expone en:
 
-- `GET /api-docs`
-- `GET /api-docs-json`
+- `GET http://localhost:3000/api-docs`
+- `GET http://localhost:3000/api-docs-json`
 
 Solo está habilitada cuando:
 
@@ -127,15 +139,15 @@ yarn test:cov
 yarn build
 ```
 
-## Validate
+## Validación
 
-El pipeline `validate` replica el flujo de CI y corre stages separados para tests, cobertura, contrato y performance.
+El pipeline `validate` replica el flujo de CI y corre etapas separadas para pruebas, cobertura, contrato y performance.
 
 ```bash
 # pipeline completo
 yarn validate
 
-# stages individuales
+# etapas individuales
 yarn validate:test
 yarn validate:coverage
 yarn validate:contract
@@ -143,10 +155,10 @@ yarn validate:performance
 yarn validate:summary
 ```
 
-### Qué hace cada stage
+### Qué hace cada etapa
 
-- `validate:test`: corre unit tests y e2e/integration tests
-- `validate:coverage`: corre Jest con gate mínimo de cobertura de líneas al `90%`
+- `validate:test`: corre pruebas unitarias y e2e
+- `validate:coverage`: corre Jest con un gate mínimo de cobertura de líneas al `90%`
 - `validate:contract`: levanta la app, descarga `/api-docs-json` y valida respuestas reales contra OpenAPI
 - `validate:performance`: levanta la app y ejecuta Artillery sobre el flujo real de `/holidays`
 - `validate:summary`: consolida los reportes generados en `.validate/reports/validate-summary.md`
@@ -158,7 +170,7 @@ Los reportes y logs quedan en:
 - `.validate/reports`
 - `.validate/logs`
 
-Reportes principales:
+Archivos principales:
 
 - `.validate/reports/unit-report.json`
 - `.validate/reports/coverage-report.json`
@@ -168,14 +180,14 @@ Reportes principales:
 
 ### Notas del pipeline
 
-- `validate:contract` y `validate:performance` pegan al sitio real `https://www.feriados.cl`
-- eso hace el validate más realista, pero también más sensible a cambios o degradación externa
+- `validate:contract` y `validate:performance` consultan el sitio real `https://www.feriados.cl`
+- eso hace la validación más realista, pero también más sensible a cambios o degradación externa
 - el gate de performance exige `200` en cada request y hoy usa estos umbrales:
   - media `<= 3000ms`
   - p95 `<= 3500ms`
   - p99 `<= 4500ms`
 
-## CI
+## Integración continua
 
 El workflow de GitHub Actions está en `.github/workflows/validate.yml`.
 
@@ -188,7 +200,7 @@ Orden de ejecución:
    - `coverage-quality-gate`
 3. `validation-summary`
 
-Cada job instala dependencias con `yarn --frozen-lockfile`, ejecuta su stage dedicado y sube artefactos.
+Cada job instala dependencias con `yarn --frozen-lockfile`, ejecuta su etapa dedicada y sube artefactos.
 
 ## Estructura de carpetas
 
@@ -211,6 +223,6 @@ scripts/
 
 ## Observaciones
 
-- El adapter actual está pensado para `feriados.cl`; si cambia la estructura HTML del sitio, el servicio y los stages reales de validate pueden fallar.
+- El adaptador actual está pensado para `feriados.cl`; si cambia la estructura HTML del sitio, el servicio y las validaciones reales pueden fallar.
 - Los middlewares globales registran `user-agent` e IP para todas las rutas.
-- El payload HTTP público está en español aunque la estructura interna del feature esté en inglés.
+- El payload HTTP público se mantiene en español aunque la estructura interna del feature esté en inglés.
