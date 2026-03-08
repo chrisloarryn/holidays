@@ -9,10 +9,10 @@ import { IpMiddleware } from './middlewares/ip.middleware';
 @Module({
   imports: [HolidaysModule],
   controllers: [AppController],
-  providers: [AppService, HolidayScrapperService],
+  providers: [AppService, HolidayScrapperService]
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(UserAgentMiddleware, IpMiddleware).forRoutes('*'); // Aplica los middlewares a todas las rutas
+    consumer.apply(UserAgentMiddleware, IpMiddleware).forRoutes('{*path}');
   }
 }

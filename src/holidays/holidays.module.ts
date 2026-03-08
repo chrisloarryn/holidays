@@ -5,6 +5,6 @@ import { HolidayScrapperService } from '../services/holiday-scrapper/holiday-scr
 
 @Module({
   controllers: [HolidaysController],
-  providers: [HolidayScrapperService, HolidaysService],
+  providers: [HolidayScrapperService, HolidaysService]
 })
 export class HolidaysModule {}

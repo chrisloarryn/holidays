@@ -8,7 +8,7 @@ export class HolidaysService {
   constructor(
     private readonly holidayScrapperService: HolidayScrapperService
   ) {}
-  create(createHolidayDto: CreateHolidayDto) {
+  create(_createHolidayDto: CreateHolidayDto) {
     return 'This action adds a new holiday';
   }
 
@@ -20,7 +20,7 @@ export class HolidaysService {
     return `This action returns a #${id} holiday`;
   }
 
-  update(id: number, updateHolidayDto: UpdateHolidayDto) {
+  update(id: number, _updateHolidayDto: UpdateHolidayDto) {
     return `This action updates a #${id} holiday`;
   }
 

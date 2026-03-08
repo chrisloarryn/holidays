@@ -1,5 +1,5 @@
-# Paso 1: Definir la imagen base con Node.js versión 21
-FROM node:21-alpine
+# Paso 1: Definir la imagen base con Node.js versión 25.8.0
+FROM node:25.8.0-alpine
 
 # Paso 2: Establecer el directorio de trabajo en el contenedor
 WORKDIR /usr/src/app
