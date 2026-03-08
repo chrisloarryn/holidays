@@ -20,22 +20,31 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "validate:test": "node ./scripts/validate/run-jest-tests.mjs",
+    "validate:coverage": "node ./scripts/validate/run-coverage-gate.mjs",
+    "validate:contract": "node ./scripts/validate/run-contract-tests.mjs",
+    "validate:performance": "node ./scripts/validate/run-performance-tests.mjs",
+    "validate:summary": "node ./scripts/validate/publish-validation-summary.mjs workflow --unit-report .validate/reports/unit-report.json --contract-report .validate/reports/contract-report.json --performance-report .validate/reports/performance-report.json --coverage-report .validate/reports/coverage-report.json --summary-file .validate/reports/validate-summary.md",
+    "validate": "node ./scripts/validate/run-validate.mjs"
   },
   "dependencies": {
     "@nestjs/common": "11.1.16",
     "@nestjs/core": "11.1.16",
     "@nestjs/mapped-types": "2.1.0",
     "@nestjs/platform-express": "11.1.16",
+    "@nestjs/swagger": "11.2.6",
     "axios": "1.13.6",
     "cheerio": "1.2.0",
     "class-transformer": "0.5.1",
     "class-validator": "0.15.1",
     "dayjs": "1.11.19",
     "reflect-metadata": "0.2.2",
-    "rxjs": "7.8.2"
+    "rxjs": "7.8.2",
+    "swagger-ui-express": "5.0.1"
   },
   "devDependencies": {
+    "@apidevtools/swagger-parser": "12.1.0",
     "@nestjs/cli": "11.0.16",
     "@nestjs/schematics": "11.0.9",
     "@nestjs/testing": "11.1.16",
@@ -45,6 +54,10 @@
     "@types/supertest": "7.2.0",
     "@typescript-eslint/eslint-plugin": "8.56.1",
     "@typescript-eslint/parser": "8.56.1",
+    "ajv": "8.18.0",
+    "ajv-formats": "3.0.1",
+    "artillery": "2.0.30",
+    "cross-env": "10.1.0",
     "eslint": "10.0.3",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-prettier": "5.5.5",
@@ -67,10 +80,13 @@
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
+      "^.+\\.ts$": "ts-jest"
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s"
+    ],
+    "coveragePathIgnorePatterns": [
+      "\\.spec\\.ts$"
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"

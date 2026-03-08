@@ -1,15 +1,12 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { HolidaysModule } from './holidays/holidays.module';
-import { HolidayScrapperService } from './services/holiday-scrapper/holiday-scrapper.service';
-import { UserAgentMiddleware } from './middlewares/user-agent.middleware';
-import { IpMiddleware } from './middlewares/ip.middleware';
+import { RootController } from './root/presentation/http/root.controller';
+import { UserAgentMiddleware } from './shared/infrastructure/http/middleware/user-agent.middleware';
+import { IpMiddleware } from './shared/infrastructure/http/middleware/ip.middleware';
 
 @Module({
   imports: [HolidaysModule],
-  controllers: [AppController],
-  providers: [AppService, HolidayScrapperService]
+  controllers: [RootController]
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

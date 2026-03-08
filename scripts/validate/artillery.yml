@@ -1,0 +1,31 @@
+config:
+  target: "{{ $processEnvironment.TARGET_URL }}"
+  phases:
+    - name: "Live feriados baseline"
+      duration: 30
+      arrivalRate: 1
+  plugins:
+    ensure: {}
+    expect:
+      expectDefault200: true
+      reportFailuresAsErrors: true
+  ensure:
+    maxErrorRate: 0
+    conditions:
+      - expression: "http.response_time.mean <= 3000"
+      - expression: "http.response_time.p95 <= 3500"
+      - expression: "http.response_time.p99 <= 4500"
+
+scenarios:
+  - name: "Real holidays flow"
+    flow:
+      - get:
+          name: "GET /holidays"
+          url: "/holidays"
+          expect:
+            - statusCode: 200
+      - get:
+          name: "GET /holidays?year=2026"
+          url: "/holidays?year=2026"
+          expect:
+            - statusCode: 200

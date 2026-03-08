@@ -1,0 +1,302 @@
+name: Validate Node Application
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    outputs:
+      tests_run: ${{ steps.publish-summary.outputs.tests_run }}
+      failures: ${{ steps.publish-summary.outputs.failures }}
+      skipped: ${{ steps.publish-summary.outputs.skipped }}
+      duration_seconds: ${{ steps.publish-summary.outputs.duration_seconds }}
+      unit_tests: ${{ steps.publish-summary.outputs.unit_tests }}
+      e2e_tests: ${{ steps.publish-summary.outputs.e2e_tests }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node 25.8.0
+        uses: actions/setup-node@v4
+        with:
+          node-version: '25.8.0'
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn --frozen-lockfile
+
+      - name: Run unit and integration validate stage
+        id: run-tests
+        continue-on-error: true
+        shell: bash
+        run: |
+          mkdir -p .validate/logs .validate/reports
+          set -o pipefail
+          yarn validate:test 2>&1 | tee .validate/logs/unit-stage-console.log
+          exit_code=${PIPESTATUS[0]}
+          echo "exit_code=${exit_code}" >> "$GITHUB_OUTPUT"
+
+      - name: Publish unit summary
+        id: publish-summary
+        if: always()
+        run: |
+          node scripts/validate/publish-validation-summary.mjs unit \
+            --report-json .validate/reports/unit-report.json \
+            --summary-file "$GITHUB_STEP_SUMMARY" \
+            --output-file "$GITHUB_OUTPUT"
+
+      - name: Upload unit test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-report
+          path: |
+            .validate/reports/unit-report.json
+            .validate/reports/jest-unit.json
+            .validate/reports/jest-e2e.json
+            .validate/logs/unit-tests.log
+            .validate/logs/integration-tests.log
+            .validate/logs/unit-stage-console.log
+          if-no-files-found: ignore
+
+      - name: Fail if unit tests failed
+        if: always() && steps.run-tests.outputs.exit_code != '0'
+        run: exit 1
+
+  contract-tests:
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    outputs:
+      cases_total: ${{ steps.publish-summary.outputs.cases_total }}
+      cases_passed: ${{ steps.publish-summary.outputs.cases_passed }}
+      cases_failed: ${{ steps.publish-summary.outputs.cases_failed }}
+      duration_seconds: ${{ steps.publish-summary.outputs.duration_seconds }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node 25.8.0
+        uses: actions/setup-node@v4
+        with:
+          node-version: '25.8.0'
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn --frozen-lockfile
+
+      - name: Run contract validate stage
+        id: run-tests
+        continue-on-error: true
+        shell: bash
+        run: |
+          mkdir -p .validate/logs .validate/reports
+          set -o pipefail
+          yarn validate:contract 2>&1 | tee .validate/logs/contract-stage-console.log
+          exit_code=${PIPESTATUS[0]}
+          echo "exit_code=${exit_code}" >> "$GITHUB_OUTPUT"
+
+      - name: Publish contract summary
+        id: publish-summary
+        if: always()
+        run: |
+          node scripts/validate/publish-validation-summary.mjs contract \
+            --report-json .validate/reports/contract-report.json \
+            --summary-file "$GITHUB_STEP_SUMMARY" \
+            --output-file "$GITHUB_OUTPUT"
+
+      - name: Upload contract reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: contract-report
+          path: |
+            .validate/reports/contract-report.json
+            .validate/reports/openapi.json
+            .validate/logs/contract-build.log
+            .validate/logs/contract-server.log
+            .validate/logs/contract-stage-console.log
+          if-no-files-found: ignore
+
+      - name: Fail if contract tests failed
+        if: always() && steps.run-tests.outputs.exit_code != '0'
+        run: exit 1
+
+  performance-tests:
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    outputs:
+      requests_total: ${{ steps.publish-summary.outputs.requests_total }}
+      requests_ok: ${{ steps.publish-summary.outputs.requests_ok }}
+      requests_ko: ${{ steps.publish-summary.outputs.requests_ko }}
+      mean_response_ms: ${{ steps.publish-summary.outputs.mean_response_ms }}
+      p95_ms: ${{ steps.publish-summary.outputs.p95_ms }}
+      p99_ms: ${{ steps.publish-summary.outputs.p99_ms }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node 25.8.0
+        uses: actions/setup-node@v4
+        with:
+          node-version: '25.8.0'
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn --frozen-lockfile
+
+      - name: Run performance validate stage
+        id: run-tests
+        continue-on-error: true
+        shell: bash
+        run: |
+          mkdir -p .validate/logs .validate/reports
+          set -o pipefail
+          yarn validate:performance 2>&1 | tee .validate/logs/performance-stage-console.log
+          exit_code=${PIPESTATUS[0]}
+          echo "exit_code=${exit_code}" >> "$GITHUB_OUTPUT"
+
+      - name: Publish performance summary
+        id: publish-summary
+        if: always()
+        run: |
+          node scripts/validate/publish-validation-summary.mjs performance \
+            --report-json .validate/reports/performance-report.json \
+            --summary-file "$GITHUB_STEP_SUMMARY" \
+            --output-file "$GITHUB_OUTPUT"
+
+      - name: Upload performance reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-report
+          path: |
+            .validate/reports/performance-report.json
+            .validate/reports/artillery-report.json
+            .validate/logs/performance-build.log
+            .validate/logs/performance-server.log
+            .validate/logs/performance-artillery.log
+            .validate/logs/performance-stage-console.log
+          if-no-files-found: ignore
+
+      - name: Fail if performance tests failed
+        if: always() && steps.run-tests.outputs.exit_code != '0'
+        run: exit 1
+
+  coverage-quality-gate:
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    outputs:
+      line_coverage_pct: ${{ steps.publish-summary.outputs.line_coverage_pct }}
+      covered_lines: ${{ steps.publish-summary.outputs.covered_lines }}
+      missed_lines: ${{ steps.publish-summary.outputs.missed_lines }}
+      coverage_threshold_pct: ${{ steps.publish-summary.outputs.coverage_threshold_pct }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node 25.8.0
+        uses: actions/setup-node@v4
+        with:
+          node-version: '25.8.0'
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn --frozen-lockfile
+
+      - name: Run coverage quality gate
+        id: run-tests
+        continue-on-error: true
+        shell: bash
+        run: |
+          mkdir -p .validate/logs .validate/reports
+          set -o pipefail
+          yarn validate:coverage 2>&1 | tee .validate/logs/coverage-stage-console.log
+          exit_code=${PIPESTATUS[0]}
+          echo "exit_code=${exit_code}" >> "$GITHUB_OUTPUT"
+
+      - name: Publish coverage summary
+        id: publish-summary
+        if: always()
+        run: |
+          node scripts/validate/publish-validation-summary.mjs coverage \
+            --report-json .validate/reports/coverage-report.json \
+            --summary-file "$GITHUB_STEP_SUMMARY" \
+            --output-file "$GITHUB_OUTPUT"
+
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            .validate/reports/coverage-report.json
+            .validate/reports/jest-coverage.json
+            .validate/logs/coverage.log
+            .validate/logs/coverage-stage-console.log
+            coverage
+          if-no-files-found: ignore
+
+      - name: Fail if coverage gate failed
+        if: always() && steps.run-tests.outputs.exit_code != '0'
+        run: exit 1
+
+  validation-summary:
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - unit-tests
+      - contract-tests
+      - performance-tests
+      - coverage-quality-gate
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Download unit report
+        uses: actions/download-artifact@v4
+        with:
+          name: unit-test-report
+          path: .validate/artifacts/unit
+
+      - name: Download contract report
+        uses: actions/download-artifact@v4
+        with:
+          name: contract-report
+          path: .validate/artifacts/contract
+
+      - name: Download performance report
+        uses: actions/download-artifact@v4
+        with:
+          name: performance-report
+          path: .validate/artifacts/performance
+
+      - name: Download coverage report
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+          path: .validate/artifacts/coverage
+
+      - name: Publish workflow summary
+        run: |
+          node scripts/validate/publish-validation-summary.mjs workflow \
+            --unit-report .validate/artifacts/unit/unit-report.json \
+            --contract-report .validate/artifacts/contract/contract-report.json \
+            --performance-report .validate/artifacts/performance/performance-report.json \
+            --coverage-report .validate/artifacts/coverage/coverage-report.json \
+            --summary-file "$GITHUB_STEP_SUMMARY"
