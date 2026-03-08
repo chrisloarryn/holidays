@@ -1,25 +1,25 @@
-# API de Feriados
+# Holidays API
 
-Servicio NestJS para consultar feriados de Chile consumiendo y parseando `https://www.feriados.cl`.
+NestJS service for retrieving Chilean holidays by consuming and parsing `https://www.feriados.cl`.
 
-El repositorio está organizado con enfoque por funcionalidad dentro de `src/holidays`:
+The repository is organized with a feature-first structure inside `src/holidays`:
 
-- `domain`: modelo de dominio `Holiday`
-- `application`: casos de uso, puertos y errores
-- `infrastructure`: adaptador concreto contra `feriados.cl`
-- `presentation`: controlador HTTP, DTOs y mapeo del payload público
+- `domain`: `Holiday` domain model
+- `application`: use cases, ports, and errors
+- `infrastructure`: concrete adapter for `feriados.cl`
+- `presentation`: HTTP controller, DTOs, and public payload mapping
 
-`AppModule` actúa como raíz de composición y `GET /` se mantiene como endpoint mínimo de entrada.
+`AppModule` acts as the composition root, and `GET /` remains the minimal entry endpoint.
 
-## Requisitos
+## Requirements
 
 - `Node 25.8.0`
-- `yarn` clásico (`1.x`)
-- `nvm` recomendado
+- classic `yarn` (`1.x`)
+- `nvm` recommended
 
-La versión de Node queda fijada en `.nvmrc` y en `package.json`.
+The Node version is pinned in `.nvmrc` and `package.json`.
 
-## Instalación
+## Installation
 
 ```bash
 nvm install 25.8.0
@@ -27,25 +27,25 @@ nvm use 25.8.0
 yarn install
 ```
 
-## Ejecución
+## Running the service
 
 ```bash
-# desarrollo
+# development
 yarn start
 
-# modo observación
+# watch mode
 yarn start:dev
 
-# producción local
+# local production run
 yarn build
 yarn start:prod
 ```
 
-La aplicación levanta por defecto en `http://localhost:3000`.
+The application runs on `http://localhost:3000` by default.
 
-## URLs expuestas
+## Exposed URLs
 
-Con la aplicación levantada en local, estas son las rutas públicas del servicio:
+With the service running locally, these are the public HTTP routes:
 
 - `GET http://localhost:3000/`
 - `GET http://localhost:3000/holidays`
@@ -55,13 +55,13 @@ Con la aplicación levantada en local, estas son las rutas públicas del servici
 - `PATCH http://localhost:3000/holidays/:id`
 - `DELETE http://localhost:3000/holidays/:id`
 
-## Endpoints principales
+## Main endpoints
 
 ### `GET /`
 
-Endpoint raíz mínimo.
+Minimal root endpoint.
 
-Respuesta:
+Response:
 
 ```text
 Hello World!
@@ -69,20 +69,20 @@ Hello World!
 
 ### `GET /holidays`
 
-Lista los feriados para el año actual.
+Returns holidays for the current year.
 
 ### `GET /holidays?year=2026`
 
-Lista los feriados del año indicado.
+Returns holidays for the requested year.
 
-Reglas:
+Rules:
 
-- si `year` no viene, se usa el año actual
-- si `year` no es numérico, responde `400`
-- si el año no existe en `feriados.cl`, responde `404`
-- si falla la obtención o el parseo del sitio origen, responde `500`
+- if `year` is omitted, the current year is used
+- if `year` is not numeric, the API returns `400`
+- if the year does not exist in `feriados.cl`, the API returns `404`
+- if fetching or parsing the upstream site fails, the API returns `500`
 
-Ejemplo de respuesta:
+Example response:
 
 ```json
 [
@@ -98,38 +98,38 @@ Ejemplo de respuesta:
 ]
 ```
 
-## Endpoints actualmente no implementados de forma real
+## Placeholder endpoints
 
-Estas rutas se mantienen porque forman parte del contrato HTTP actual:
+These routes are still exposed because they are part of the current HTTP contract:
 
 - `POST /holidays`
 - `GET /holidays/:id`
 - `PATCH /holidays/:id`
 - `DELETE /holidays/:id`
 
-Hoy responden con mensajes placeholder y están aisladas en casos de uso dedicados.
+They currently return placeholder messages and are isolated in dedicated use cases.
 
-## Documentación OpenAPI
+## OpenAPI documentation
 
-La documentación OpenAPI se expone en:
+OpenAPI is exposed at:
 
 - `GET http://localhost:3000/api-docs`
 - `GET http://localhost:3000/api-docs-json`
 
-Solo está habilitada cuando:
+It is enabled only when:
 
 - `NODE_ENV=development`
 - `NODE_ENV=test`
 - `NODE_ENV=validate`
-- o `ENABLE_OPENAPI=true`
+- or `ENABLE_OPENAPI=true`
 
-Ejemplo:
+Example:
 
 ```bash
 ENABLE_OPENAPI=true yarn start:dev
 ```
 
-## Scripts útiles
+## Useful scripts
 
 ```bash
 yarn lint
@@ -139,15 +139,15 @@ yarn test:cov
 yarn build
 ```
 
-## Validación
+## Validation
 
-El pipeline `validate` replica el flujo de CI y corre etapas separadas para pruebas, cobertura, contrato y performance.
+The `validate` pipeline mirrors CI and runs separate stages for tests, coverage, contract validation, and performance validation.
 
 ```bash
-# pipeline completo
+# full pipeline
 yarn validate
 
-# etapas individuales
+# individual stages
 yarn validate:test
 yarn validate:coverage
 yarn validate:contract
@@ -155,22 +155,22 @@ yarn validate:performance
 yarn validate:summary
 ```
 
-### Qué hace cada etapa
+### What each stage does
 
-- `validate:test`: corre pruebas unitarias y e2e
-- `validate:coverage`: corre Jest con un gate mínimo de cobertura de líneas al `90%`
-- `validate:contract`: levanta la app, descarga `/api-docs-json` y valida respuestas reales contra OpenAPI
-- `validate:performance`: levanta la app y ejecuta Artillery sobre el flujo real de `/holidays`
-- `validate:summary`: consolida los reportes generados en `.validate/reports/validate-summary.md`
+- `validate:test`: runs unit and e2e tests
+- `validate:coverage`: runs Jest with a minimum line coverage gate of `90%`
+- `validate:contract`: boots the app, downloads `/api-docs-json`, and validates live responses against OpenAPI
+- `validate:performance`: boots the app and runs Artillery against the real `/holidays` flow
+- `validate:summary`: consolidates the generated reports into `.validate/reports/validate-summary.md`
 
-### Artefactos locales
+### Local artifacts
 
-Los reportes y logs quedan en:
+Reports and logs are written to:
 
 - `.validate/reports`
 - `.validate/logs`
 
-Archivos principales:
+Main files:
 
 - `.validate/reports/unit-report.json`
 - `.validate/reports/coverage-report.json`
@@ -178,31 +178,31 @@ Archivos principales:
 - `.validate/reports/performance-report.json`
 - `.validate/reports/validate-summary.md`
 
-### Notas del pipeline
+### Pipeline notes
 
-- `validate:contract` y `validate:performance` consultan el sitio real `https://www.feriados.cl`
-- eso hace la validación más realista, pero también más sensible a cambios o degradación externa
-- el gate de performance exige `200` en cada request y hoy usa estos umbrales:
-  - media `<= 3000ms`
+- `validate:contract` and `validate:performance` call the real `https://www.feriados.cl` site
+- this makes validation more realistic, but also more sensitive to upstream changes or degradation
+- the performance gate requires `200` on every request and currently uses these thresholds:
+  - mean `<= 3000ms`
   - p95 `<= 3500ms`
   - p99 `<= 4500ms`
 
-## Integración continua
+## Continuous integration
 
-El workflow de GitHub Actions está en `.github/workflows/validate.yml`.
+The GitHub Actions workflow lives in `.github/workflows/validate.yml`.
 
-Orden de ejecución:
+Execution order:
 
 1. `unit-tests`
-2. en paralelo:
+2. in parallel:
    - `contract-tests`
    - `performance-tests`
    - `coverage-quality-gate`
 3. `validation-summary`
 
-Cada job instala dependencias con `yarn --frozen-lockfile`, ejecuta su etapa dedicada y sube artefactos.
+Each job installs dependencies with `yarn --frozen-lockfile`, runs its dedicated stage, and uploads artifacts.
 
-## Estructura de carpetas
+## Folder structure
 
 ```text
 src/
@@ -221,8 +221,8 @@ scripts/
   workflows/
 ```
 
-## Observaciones
+## Notes
 
-- El adaptador actual está pensado para `feriados.cl`; si cambia la estructura HTML del sitio, el servicio y las validaciones reales pueden fallar.
-- Los middlewares globales registran `user-agent` e IP para todas las rutas.
-- El payload HTTP público se mantiene en español aunque la estructura interna del feature esté en inglés.
+- The current adapter is built specifically for `feriados.cl`; if that site changes its HTML structure, the service and the live validation stages may fail.
+- Global middlewares log `user-agent` and IP for every route.
+- The public HTTP payload remains in Spanish even though the internal feature structure is in English.
